@@ -15,15 +15,11 @@ label is not graded.
 
 **Pull request**
 
-[Link to the pull request you opened. It must be the pull request's own page on the Path
-Review repo, not your fork's branch page.]
+https://github.com/codepath/pathreview-ai301-fa26-s1/pull/94
 
 **Branch**
 
-[The name of the branch the pull request comes from, exactly as it appears in your fork.
-The naming shape is a type prefix, then the issue number, then a short description. **The
-issue number in the branch name must be the number of the issue the pull request fixes** —
-a name carrying any other number does not satisfy this field.]
+fix/71-heading-fixture
 
 ## Eval iterations
 
@@ -32,28 +28,29 @@ fields.
 
 **Run history**
 
-[The agreement score of each run you did, in order. A single run is a complete answer if
-only one run occurred. **The last score in your list must match the agreement line in the
-`eval-run.txt` you committed** — that file is the record of your final run.]
+I ran two small smoke tests first and got "agreement: 3/3" on both. I then ran a canary across all five categories and got "agreement: 5/5". After those passed, I ran the full evaluation and got "agreement: 18/20 scored items (bar: 18/20: PASS)". The full run is the one saved in eval-run.txt.
 
 **Package analysis**
 
-[Pick one scored package (`pkg-01` through `pkg-20` — the four `calib-` packages are never
-scored). Name it by id, say what your rubric decided and what the gold label said, and
-explain why your rubric read it that way.]
+I looked at pkg-08. My rubric decided reject, while the gold label was accept. The eval result showed "pkg-08  clear-accept  accept  reject  NO  failed: Repository checks".
+
+The package said, "Requirements: cheatsheets regenerated (no binding changes, no diff); code formatted; integration test added; new error text internationalised; no UserConfig changes." It also gave specific test evidence: "Integration test stash_untracked_only_errors passes; go test ./... passes; go generate ./... produces no cheatsheet diff."
+
+My Repository checks rule is strict about having visible evidence that applicable checks were actually run. The package provides observable outcomes for several checks, including the integration test, `go test ./...`, and `go generate ./...`, while other requirements such as `"code formatted"` are stated without a separate observable outcome. Based on my rubric's requirement that applicable checks have visible outcomes, the tool rejected the package under Repository checks. The gold label considered the package ready, showing that my rule was more conservative about repository-check evidence than the gold standard.
 
 **Check rationale**
 
-[Quote one check from the `rubric.md` you uploaded to `tools/pr-precheck/`, exactly as it reads now.
-Then say why it reads that way — what you revised to get there, or what you rejected in
-favour of it.]
+One of my required checks is:
+
+| **Repository checks** | The test evidence read against the repository's stated test, lint, build, or validation requirements in the repo-facts block and the plan's test plan, using Test evidence in the evidence guide. | Pass if the applicable repository checks were actually run and their outcomes are visible in the evidence. If a stated check cannot be run, pass only when the limitation and its effect on confidence are explicitly disclosed rather than silently omitted. | required |
+
+I wrote it this way because I did not want a PR to pass just because it says something like “tests pass.” I wanted the tool to look for evidence of the checks the repository actually requires and their outcomes. I also added the exception for checks that cannot be run so an honest limitation does not automatically fail a PR, as long as the limitation and its effect are clearly disclosed.
 
 **Trade-offs**
 
-[Every check gives something up. Any one of these is a complete answer: a package whose
-result it changes, a canary you re-ran with `--only`, a case you accept it will miss, or a
-stated reason nothing changed elsewhere. "Nothing changed, and here is how I know" earns
-the point in full when the reason follows.]
+The full run showed the trade-off in making Repository checks strict: "not-tested 4/4" but "clear-accept 5/7". It correctly rejected every not-tested package, but it also rejected pkg-08 and pkg-16, which the gold labels considered clear accepts.
+
+Before the full run, I also ran a canary with --only pkg-01,pkg-02,pkg-03,pkg-04,pkg-12, one package from each category, and got "agreement: 5/5". Because that canary passed every category and the final full run reached "18/20 scored items (bar: 18/20: PASS)", I chose not to loosen Repository checks just to chase 20/20. Relaxing it could reduce false rejects, but it could also allow unsupported testing claims to pass.
 
 ---
 
